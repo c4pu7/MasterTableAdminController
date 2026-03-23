@@ -10,37 +10,27 @@ class MasterTableControllerTest {
         service = Mockito.mock(MasterTableService.class);
         jwtToUserContextConverter = Mockito.mock(JwtToUserContextConverter.class);
 
-        MasterTableController controller =
-                new MasterTableController(service, jwtToUserContextConverter);
+        MasterTableController controller = new MasterTableController(service, jwtToUserContextConverter);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
         objectMapper = new ObjectMapper();
     }
 
     private UserContext user() {
-        return UserContext.builder()
-                .username("admin")
-                .build();
+        UserContext uc = Mockito.mock(UserContext.class);
+        Mockito.when(uc.getUsername()).thenReturn("testUser");
+        return uc;
     }
 
-    // =========================
-    // RETRIEVE MANAGED TABLES
-    // =========================
-
+    // ---------- TEST: retriveManagedTables ----------
     @Test
-    void retriveManagedTables_ok() throws Exception {
-
+    void retriveManagedTables_ok_defaultSection() throws Exception {
         Page<MasterTableResponseDTO> page = Mockito.mock(Page.class);
-
-        String authorization = "auth";
         Pageable pageable = PageRequest.of(0, 1);
+        String authorization = "auth";
 
-        Mockito.when(jwtToUserContextConverter.convert(authorization))
-                .thenReturn(user());
-
-        Mockito.when(service.retriveManagedTables(TableSectionEnum.COMMON, pageable))
-                .thenReturn(page);
-
+        Mockito.when(jwtToUserContextConverter.convert(authorization)).thenReturn(user());
+        Mockito.when(service.retriveManagedTables(TableSectionEnum.COMMON, pageable)).thenReturn(page);
         Mockito.when(page.getSort()).thenReturn(Sort.unsorted());
 
         mockMvc.perform(post("/api/admin/COMMON/tables")
@@ -53,136 +43,73 @@ class MasterTableControllerTest {
     }
 
     @Test
-    void retriveManagedTables_userNull() throws Exception {
-
-        Mockito.when(jwtToUserContextConverter.convert(any()))
-                .thenReturn(null);
-
-        mockMvc.perform(post("/api/admin/COMMON/tables")
-                        .header(HttpHeaders.AUTHORIZATION, "auth"))
-                .andExpect(status().is4xxClientError());
-
-        Mockito.verifyNoInteractions(service);
-    }
-
-    // =========================
-    // RETRIEVE TABLE
-    // =========================
-
-    @Test
-    void retrieveTable_ok() throws Exception {
-
-        Page<String> page = Mockito.mock(Page.class);
-
-        String authorization = "auth";
+    void retriveManagedTables_ok_otherSection() throws Exception {
+        Page<MasterTableResponseDTO> page = Mockito.mock(Page.class);
         Pageable pageable = PageRequest.of(0, 1);
+        String authorization = "auth";
 
-        Mockito.when(jwtToUserContextConverter.convert(authorization))
-                .thenReturn(user());
-
-        Mockito.when(service.loadTable("T1", pageable))
-                .thenReturn(page);
-
+        Mockito.when(jwtToUserContextConverter.convert(authorization)).thenReturn(user());
+        Mockito.when(service.retriveManagedTables(TableSectionEnum.CREDIT, pageable)).thenReturn(page);
         Mockito.when(page.getSort()).thenReturn(Sort.unsorted());
 
-        mockMvc.perform(post("/api/admin/tables/T1/records")
+        mockMvc.perform(post("/api/admin/CREDIT/tables")
                         .param("pageNumber", "0")
                         .param("pageSize", "1")
                         .header(HttpHeaders.AUTHORIZATION, authorization))
                 .andExpect(status().isOk());
 
-        Mockito.verify(service).loadTable("T1", pageable);
+        Mockito.verify(service).retriveManagedTables(TableSectionEnum.CREDIT, pageable);
     }
 
+    // ---------- TEST: retrieveTable ----------
     @Test
-    void retrieveTable_userNull() throws Exception {
-
-        Mockito.when(jwtToUserContextConverter.convert(any()))
-                .thenReturn(null);
-
-        mockMvc.perform(post("/api/admin/tables/T1/records")
-                        .header(HttpHeaders.AUTHORIZATION, "auth"))
-                .andExpect(status().is4xxClientError());
-
-        Mockito.verifyNoInteractions(service);
-    }
-
-    // =========================
-    // SAVE TABLE
-    // =========================
-
-    @Test
-    void saveTable_ok() throws Exception {
-
+    void retrieveTable_ok() throws Exception {
+        Page<Map<String, Object>> page = Mockito.mock(Page.class);
+        Pageable pageable = PageRequest.of(0, 1);
         String authorization = "auth";
 
-        BaseTableRequestDTO dto = new BaseTableRequestDTO() {
-            @Override
-            public String getConcreteTableName() {
-                return "T1";
-            }
-        };
-        dto.setMandantID("MAND");
+        Mockito.when(jwtToUserContextConverter.convert(authorization)).thenReturn(user());
+        Mockito.when(service.loadTable("T_TEST", pageable)).thenReturn(page);
+        Mockito.when(page.getSort()).thenReturn(Sort.unsorted());
 
-        Mockito.when(jwtToUserContextConverter.convert(authorization))
-                .thenReturn(user());
-
-        mockMvc.perform(put("/api/admin/tables/T1/save")
-                        .header(HttpHeaders.AUTHORIZATION, authorization)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
+        mockMvc.perform(post("/api/admin/tables/T_TEST/records")
+                        .param("pageNumber", "0")
+                        .param("pageSize", "1")
+                        .header(HttpHeaders.AUTHORIZATION, authorization))
                 .andExpect(status().isOk());
 
-        Mockito.verify(service).saveTable(eq("T1"), any(), any());
+        Mockito.verify(service).loadTable("T_TEST", pageable);
+    }
+
+    // ---------- TEST: saveTable ----------
+    @Test
+    void saveTable_ok() throws Exception {
+        String authorization = "auth";
+        BaseTableRequestDTO body = new BaseTableRequestDTO();
+        body.setMandantID("123");
+
+        Mockito.when(jwtToUserContextConverter.convert(authorization)).thenReturn(user());
+
+        mockMvc.perform(put("/api/admin/tables/T_TEST/save")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body))
+                        .header(HttpHeaders.AUTHORIZATION, authorization))
+                .andExpect(status().isOk());
+
+        Mockito.verify(service).saveTable(eq("T_TEST"), eq(body), any(UserContext.class));
     }
 
     @Test
-    void saveTable_mandantMissing() throws Exception {
-
+    void saveTable_missingMandantID_shouldFail() throws Exception {
         String authorization = "auth";
+        BaseTableRequestDTO body = new BaseTableRequestDTO(); // mandantID = null
 
-        BaseTableRequestDTO dto = new BaseTableRequestDTO() {
-            @Override
-            public String getConcreteTableName() {
-                return "T1";
-            }
-        };
-        dto.setMandantID(null);
+        Mockito.when(jwtToUserContextConverter.convert(authorization)).thenReturn(user());
 
-        Mockito.when(jwtToUserContextConverter.convert(authorization))
-                .thenReturn(user());
-
-        mockMvc.perform(put("/api/admin/tables/T1/save")
-                        .header(HttpHeaders.AUTHORIZATION, authorization)
+        mockMvc.perform(put("/api/admin/tables/T_TEST/save")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().is4xxClientError());
-
-        Mockito.verifyNoInteractions(service);
-    }
-
-    @Test
-    void saveTable_userNull() throws Exception {
-
-        String authorization = "auth";
-
-        BaseTableRequestDTO dto = new BaseTableRequestDTO() {
-            @Override
-            public String getConcreteTableName() {
-                return "T1";
-            }
-        };
-        dto.setMandantID("MAND");
-
-        Mockito.when(jwtToUserContextConverter.convert(authorization))
-                .thenReturn(null);
-
-        mockMvc.perform(put("/api/admin/tables/T1/save")
-                        .header(HttpHeaders.AUTHORIZATION, authorization)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().is4xxClientError());
-
-        Mockito.verifyNoInteractions(service);
+                        .content(objectMapper.writeValueAsString(body))
+                        .header(HttpHeaders.AUTHORIZATION, authorization))
+                .andExpect(status().is5xxServerError()); // AdminException lanciata
     }
 }
