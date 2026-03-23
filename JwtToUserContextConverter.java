@@ -1,10 +1,4 @@
-package eu.unicredit.xframe.qrh.admin.rs.api.converter;
 
-import eu.unicredit.xframe.qrh.admin.rs.security.ContextTokenProvider;
-import eu.unicredit.xframe.qrh.admin.rs.security.UserContext;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.stereotype.Component;
 
 @Component(JwtToUserContextConverter.SERVICE_NAME)
 public class JwtToUserContextConverter implements Converter<String, UserContext> {
