@@ -1,0 +1,188 @@
+class MasterTableControllerTest {
+
+    private MasterTableService service;
+    private JwtToUserContextConverter jwtToUserContextConverter;
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        service = Mockito.mock(MasterTableService.class);
+        jwtToUserContextConverter = Mockito.mock(JwtToUserContextConverter.class);
+
+        MasterTableController controller =
+                new MasterTableController(service, jwtToUserContextConverter);
+
+        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        objectMapper = new ObjectMapper();
+    }
+
+    private UserContext user() {
+        return UserContext.builder()
+                .username("admin")
+                .build();
+    }
+
+    // =========================
+    // RETRIEVE MANAGED TABLES
+    // =========================
+
+    @Test
+    void retriveManagedTables_ok() throws Exception {
+
+        Page<MasterTableResponseDTO> page = Mockito.mock(Page.class);
+
+        String authorization = "auth";
+        Pageable pageable = PageRequest.of(0, 1);
+
+        Mockito.when(jwtToUserContextConverter.convert(authorization))
+                .thenReturn(user());
+
+        Mockito.when(service.retriveManagedTables(TableSectionEnum.COMMON, pageable))
+                .thenReturn(page);
+
+        Mockito.when(page.getSort()).thenReturn(Sort.unsorted());
+
+        mockMvc.perform(post("/api/admin/COMMON/tables")
+                        .param("pageNumber", "0")
+                        .param("pageSize", "1")
+                        .header(HttpHeaders.AUTHORIZATION, authorization))
+                .andExpect(status().isOk());
+
+        Mockito.verify(service).retriveManagedTables(TableSectionEnum.COMMON, pageable);
+    }
+
+    @Test
+    void retriveManagedTables_userNull() throws Exception {
+
+        Mockito.when(jwtToUserContextConverter.convert(any()))
+                .thenReturn(null);
+
+        mockMvc.perform(post("/api/admin/COMMON/tables")
+                        .header(HttpHeaders.AUTHORIZATION, "auth"))
+                .andExpect(status().is4xxClientError());
+
+        Mockito.verifyNoInteractions(service);
+    }
+
+    // =========================
+    // RETRIEVE TABLE
+    // =========================
+
+    @Test
+    void retrieveTable_ok() throws Exception {
+
+        Page<String> page = Mockito.mock(Page.class);
+
+        String authorization = "auth";
+        Pageable pageable = PageRequest.of(0, 1);
+
+        Mockito.when(jwtToUserContextConverter.convert(authorization))
+                .thenReturn(user());
+
+        Mockito.when(service.loadTable("T1", pageable))
+                .thenReturn(page);
+
+        Mockito.when(page.getSort()).thenReturn(Sort.unsorted());
+
+        mockMvc.perform(post("/api/admin/tables/T1/records")
+                        .param("pageNumber", "0")
+                        .param("pageSize", "1")
+                        .header(HttpHeaders.AUTHORIZATION, authorization))
+                .andExpect(status().isOk());
+
+        Mockito.verify(service).loadTable("T1", pageable);
+    }
+
+    @Test
+    void retrieveTable_userNull() throws Exception {
+
+        Mockito.when(jwtToUserContextConverter.convert(any()))
+                .thenReturn(null);
+
+        mockMvc.perform(post("/api/admin/tables/T1/records")
+                        .header(HttpHeaders.AUTHORIZATION, "auth"))
+                .andExpect(status().is4xxClientError());
+
+        Mockito.verifyNoInteractions(service);
+    }
+
+    // =========================
+    // SAVE TABLE
+    // =========================
+
+    @Test
+    void saveTable_ok() throws Exception {
+
+        String authorization = "auth";
+
+        BaseTableRequestDTO dto = new BaseTableRequestDTO() {
+            @Override
+            public String getConcreteTableName() {
+                return "T1";
+            }
+        };
+        dto.setMandantID("MAND");
+
+        Mockito.when(jwtToUserContextConverter.convert(authorization))
+                .thenReturn(user());
+
+        mockMvc.perform(put("/api/admin/tables/T1/save")
+                        .header(HttpHeaders.AUTHORIZATION, authorization)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk());
+
+        Mockito.verify(service).saveTable(eq("T1"), any(), any());
+    }
+
+    @Test
+    void saveTable_mandantMissing() throws Exception {
+
+        String authorization = "auth";
+
+        BaseTableRequestDTO dto = new BaseTableRequestDTO() {
+            @Override
+            public String getConcreteTableName() {
+                return "T1";
+            }
+        };
+        dto.setMandantID(null);
+
+        Mockito.when(jwtToUserContextConverter.convert(authorization))
+                .thenReturn(user());
+
+        mockMvc.perform(put("/api/admin/tables/T1/save")
+                        .header(HttpHeaders.AUTHORIZATION, authorization)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().is4xxClientError());
+
+        Mockito.verifyNoInteractions(service);
+    }
+
+    @Test
+    void saveTable_userNull() throws Exception {
+
+        String authorization = "auth";
+
+        BaseTableRequestDTO dto = new BaseTableRequestDTO() {
+            @Override
+            public String getConcreteTableName() {
+                return "T1";
+            }
+        };
+        dto.setMandantID("MAND");
+
+        Mockito.when(jwtToUserContextConverter.convert(authorization))
+                .thenReturn(null);
+
+        mockMvc.perform(put("/api/admin/tables/T1/save")
+                        .header(HttpHeaders.AUTHORIZATION, authorization)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().is4xxClientError());
+
+        Mockito.verifyNoInteractions(service);
+    }
+}
