@@ -1,0 +1,84 @@
+
+@RestController
+@RequestMapping(ControllerConstants.API_CONTEXT)
+@Slf4j
+public class SearchController {
+    private final SearchService service;
+    private final FilenetDocumentsService filenetDocumentsService;
+    private final JwtToUserContextConverter jwtToUserContextConverter;
+
+    public SearchController(SearchService service, FilenetDocumentsService filenetDocumentsService,
+                            @Qualifier(JwtToUserContextConverter.SERVICE_NAME) JwtToUserContextConverter jwtToUserContextConverter) {
+        this.service = service;
+        this.filenetDocumentsService = filenetDocumentsService;
+        this.jwtToUserContextConverter = jwtToUserContextConverter;
+    }
+
+    @PostMapping("/searchByNDG")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "OK", response = NdgDocumentDTO.class),
+            @ApiResponse(code = 400, message = "Bad request: one of the specified parameter has a wrong format or a parameter is missing"),
+            @ApiResponse(code = 401, message = "Not authorized: the user is not authenticated"),
+            @ApiResponse(code = 403, message = "Forbidden: the user is authenticated but do not have the authority to perform this action"),
+            @ApiResponse(code = 417, message = "Expectation failed: there are no access rights available for this NDG/EVD"),
+            @ApiResponse(code = 500, message = "Generic error", response = ApiError.class)
+    })
+    public ResponseEntity<PageResponseDTO<NdgDocumentDTO>> searchByNDG(@RequestBody SearchRequestDTO searchRequestDTO,
+                                                                       @RequestParam(defaultValue = "0") int pageNumber,
+                                                                       @RequestParam(defaultValue = "1") int pageSize,
+                                                                       @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        UserContext userContext = jwtToUserContextConverter.convert(authorizationHeader);
+        if (userContext == null) {
+            throw new QBLException("Unable to validate user identity", Collections.singletonList("user-not-valid"));
+        }
+        BankRole role = userContext.getRole();
+        log.info("User [{}] performed a search for EVD: [{}], NDG [{}]", userContext.getUsername(), searchRequestDTO.getEvd(), searchRequestDTO.getNdg());
+        Page<NdgDocumentDTO> resultsPage;
+        switch (role) {
+            case RM:
+            case KSB2_I:
+                resultsPage = service.restrictedSearchByNDG(searchRequestDTO, userContext.getUsername(), role, PageRequest.of(pageNumber, pageSize));
+                break;
+            case OTHER:
+                resultsPage = service.searchByNDG(searchRequestDTO, PageRequest.of(pageNumber, pageSize));
+                break;
+            default:
+                throw new QBLException("User does not have any Bank Role", Collections.emptyList());
+        }
+        return ResponseEntity.ok()
+                .body(generatePaginationHttpForListResponse(resultsPage));
+    }
+
+    @PostMapping("/searchByEVD")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "OK", response = EvdDocumentDTO.class),
+            @ApiResponse(code = 400, message = "Bad request: one of the specified parameter has a wrong format or a parameter is missing"),
+            @ApiResponse(code = 401, message = "Not authorized: the user is not authenticated"),
+            @ApiResponse(code = 403, message = "Forbidden: the user is authenticated but do not have the authority to perform this action"),
+            @ApiResponse(code = 500, message = "Generic error", response = ApiError.class)
+    })
+    public ResponseEntity<PageResponseDTO<EvdDocumentDTO>> searchByEVD(@RequestBody SearchRequestDTO searchRequestDTO,
+                                                                       @RequestParam(defaultValue = "0") int pageNumber,
+                                                                       @RequestParam(defaultValue = "1") int pageSize,
+                                                                       @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        UserContext userContext = jwtToUserContextConverter.convert(authorizationHeader);
+        if (userContext == null) {
+            throw new QBLException("Unable to validate user identity", Collections.singletonList("user-not-valid"));
+        }
+        BankRole role = userContext.getRole();
+        Page<EvdDocumentDTO> resultsPage;
+        switch (role) {
+            case RM:
+            case KSB2_I:
+                resultsPage = service.restrictedSearchByEVD(searchRequestDTO, userContext.getUsername(), role, PageRequest.of(pageNumber, pageSize));
+                break;
+            case OTHER:
+                resultsPage = service.searchByEVD(searchRequestDTO, PageRequest.of(pageNumber, pageSize));
+                break;
+            default:
+                throw new QBLException("User does not have any Bank Role", Collections.emptyList());
+        }
+        return ResponseEntity.ok()
+                .body(generatePaginationHttpForListResponse(resultsPage));
+    }
+}
