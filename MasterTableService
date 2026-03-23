@@ -1,0 +1,75 @@
+
+@Service
+@Transactional
+@Slf4j
+public class MasterTableService {
+
+    private final MasterTableRepository repository;
+    private final MasterTableMapper mapper;
+    private final TableManagerProvider provider;
+
+    public MasterTableService(MasterTableRepository repository, MasterTableMapper mapper, TableManagerProvider provider) {
+        this.repository = repository;
+        this.mapper = mapper;
+        this.provider = provider;
+    }
+
+    public Page<MasterTableResponseDTO> retriveManagedTables(TableSectionEnum section, Pageable pageable) {
+        TableSectionEnum tableSectionEnum = (section == null) ? TableSectionEnum.COMMON : section;
+
+        Page<MasterTableResponseDTO> resultPage = repository.findByTableSectionOrderByTableName(tableSectionEnum.name(), pageable).map(mapper::toResponseDto);
+
+        if (resultPage.isEmpty()) {
+            throw new AdminException("No Tables found for section: " + tableSectionEnum, Collections.singletonList("table-not-found"));
+        }
+        return resultPage;
+    }
+
+    /**
+     * Retrieve dinamico (apertura tabella)
+     */
+    public Page<?> loadTable(String tableId, Pageable pageable) {
+
+        // 1) Recupera la riga da T_MASTER
+        MasterTableEntity master = repository.findById(tableId)
+                .orElseThrow(() -> new RuntimeException("T_MASTER not found for tableId=" + tableId));
+
+        // 2) Identifica tableName
+        String tableName = master.getTableName();
+
+        // 3) Risolvi il manager CORRETTO (ora tipizzato tramite interfaccia)
+        ITableManager<?> manager = provider.resolve(tableName);
+
+        // 4) Carica i dati tramite il manager
+        return manager.loadTable(pageable);
+    }
+
+    /**
+     * Save dinamico (submit tabella modificata)
+     */
+    @SuppressWarnings("unchecked")
+    public void saveTable(String tableId,
+                          BaseTableRequestDTO dto,
+                          UserContext userContext) {
+
+        MasterTableEntity master = repository.findById(tableId)
+                .orElseThrow(() -> new RuntimeException("T_MASTER not found for tableId=" + tableId));
+
+        String tableName = master.getTableName();
+
+        // Manager corretto
+        ITableManager manager = provider.resolve(tableName);
+
+        // Cast controllato (è giusto e voluto)
+        ITableManager<BaseTableRequestDTO> typedManager =
+                (ITableManager<BaseTableRequestDTO>) manager;
+
+        typedManager.saveTable(dto, userContext, LocalDateTime.now());
+
+        // Audit su T_MASTER
+        master.setUpdateDate(LocalDateTime.now());
+        master.setUpdateUser(userContext.getUsername());
+        repository.save(master);
+    }
+
+}
