@@ -28,7 +28,7 @@ public class MasterTableService {
     /**
      * Retrieve dinamico (apertura tabella)
      */
-    public Page<?> loadTable(String tableId, Pageable pageable) {
+    public Page<Map<String,Object>> loadTable(String tableId, Pageable pageable) {
 
         // 1) Recupera la riga da T_MASTER
         MasterTableEntity master = repository.findById(tableId)
@@ -41,7 +41,7 @@ public class MasterTableService {
         ITableManager<?> manager = provider.resolve(tableName);
 
         // 4) Carica i dati tramite il manager
-        return manager.loadTable(pageable);
+        return (Page<Map<String, Object>>) manager.loadTable(pageable);
     }
 
     /**
