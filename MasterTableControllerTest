@@ -1,0 +1,126 @@
+
+@WebMvcTest(
+        controllers = MasterTableController.class,
+        excludeFilters = {
+                @ComponentScan.Filter(type = FilterType.REGEX, pattern = "eu.unicredit.qrh.*"),
+                @ComponentScan.Filter(type = FilterType.REGEX, pattern = "eu.unicredit.xframe.qrh.core.*")
+        }
+)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(MasterTableControllerTest.TestConfig.class)
+class MasterTableControllerTest {
+
+    @Configuration
+    static class TestConfig {
+        // ✅ empty: avoids loading QrhAdminApplication
+    }
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private MasterTableService service;
+
+    @MockBean
+    private JwtToUserContextConverter jwtToUserContextConverter;
+
+    @Autowired
+    private ObjectMapper mapper;
+
+
+    private UserContext user() {
+        return UserContext.builder()
+                .username("admin")
+                .ndg("NDG1")
+                .locale("it")
+                .roles(Set.of("ROLE_TEST"))
+                .technicalUsername("tech")
+                .proposalId(UUID.randomUUID())
+                .proposalNumber(1)
+                .isReadOnly(false)
+                .lastReleasedProposalId(UUID.randomUUID())
+                .lastReleasedProposalNumber(1)
+                .build();
+    }
+
+    @Test
+    void retriveManagedTables_shouldReturn200() throws Exception {
+
+        when(jwtToUserContextConverter.convert("Bearer token")).thenReturn(user());
+
+        Page<MasterTableResponseDTO> page = new PageImpl<>(
+                List.of(new MasterTableResponseDTO()),
+                PageRequest.of(0, 1),
+                1
+        );
+
+        when(service.retriveManagedTables(eq(TableSectionEnum.COMMON), any()))
+                .thenReturn(page);
+
+        mockMvc.perform(post("/api/admin/COMMON/tables")
+                        .param("section", "COMMON")
+                        .param("pageNumber", "0")
+                        .param("pageSize", "1")
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void retrieveTable_shouldReturn200() throws Exception {
+        when(jwtToUserContextConverter.convert("Bearer token")).thenReturn(user());
+
+        Page<Map<String,Object>> page = new PageImpl<>(
+                List.of(Map.of("k", "v")),
+                PageRequest.of(0, 1),
+                1
+        );
+
+        when(service.loadTable(eq("T_TEST"), any()))
+                .thenReturn(page);
+
+        mockMvc.perform(post("/api/admin/tables/T_TEST/records")
+                        .param("pageNumber", "0")
+                        .param("pageSize", "1")
+                        .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void saveTable_shouldReturn200() throws Exception {
+
+        when(jwtToUserContextConverter.convert("Bearer token")).thenReturn(user());
+
+        BaseTableRequestDTO dto = new BaseTableRequestDTO() {
+            @Override
+            public String getConcreteTableName() { return "T_TEST"; }
+        };
+        dto.setMandantID("MAND123");
+
+        mockMvc.perform(put("/api/admin/tables/T_TEST/save")
+                        .header("Authorization", "Bearer token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(dto)))
+                .andExpect(status().isOk());
+
+        verify(service).saveTable(eq("T_TEST"), any(), any());
+    }
+
+    @Test
+    void saveTable_shouldReturn400_whenMandantIdMissing() throws Exception {
+
+        when(jwtToUserContextConverter.convert("Bearer token"))
+                .thenReturn(user());
+
+        BaseTableRequestDTO dto = new BaseTableRequestDTO() {
+            @Override
+            public String getConcreteTableName() { return "T_TEST"; }
+        };
+        dto.setMandantID(null);
+
+        mockMvc.perform(put("/api/admin/tables/T_TEST/save")
+                        .header("Authorization", "Bearer token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(dto)))
+                .andExpect(status().is4xxClientError());
+    }
+}
