@@ -1,0 +1,133 @@
+
+class SearchControllerTest {
+
+    private SearchService searchService;
+    private FilenetDocumentsService filenetDocumentsService;
+    private JwtToUserContextConverter jwtToUserContextConverter;
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        searchService = Mockito.mock(SearchService.class);
+        filenetDocumentsService = Mockito.mock(FilenetDocumentsService.class);
+        jwtToUserContextConverter = Mockito.mock(JwtToUserContextConverter.class);
+        SearchController controller = new SearchController(searchService, filenetDocumentsService, jwtToUserContextConverter);
+
+        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        objectMapper = new ObjectMapper();
+    }
+
+    @Test
+    void searchByNdg_correctParams_otherSearch() throws Exception {
+        Page<NdgDocumentDTO> resultsPage = Mockito.mock(Page.class);
+        SearchRequestDTO searchRequestDTO = new SearchRequestDTO();
+        searchRequestDTO.setNdg("ndg");
+        Pageable pageable = PageRequest.of(0, 5);
+        String authorizationHeader = "authorization";
+        UserContext userContext = Mockito.mock(UserContext.class);
+        BankRole bankRole = BankRole.OTHER;
+        String username = "username";
+
+        Mockito.when(jwtToUserContextConverter.convert(authorizationHeader)).thenReturn(userContext);
+        Mockito.when(userContext.getRole()).thenReturn(bankRole);
+        Mockito.when(userContext.getUsername()).thenReturn(username);
+        Mockito.when(searchService.searchByNDG(searchRequestDTO, pageable)).thenReturn(resultsPage);
+        Mockito.when(resultsPage.getSort()).thenReturn(Sort.unsorted());
+
+        mockMvc.perform(post("/api/searchByNDG")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(searchRequestDTO))
+                        .param("pageNumber", String.valueOf(pageable.getPageNumber()))
+                        .param("pageSize", String.valueOf(pageable.getPageSize()))
+                        .header(HttpHeaders.AUTHORIZATION, authorizationHeader))
+                .andExpect(status().isOk());
+
+        Mockito.verify(searchService, Mockito.times(1)).searchByNDG(searchRequestDTO, pageable);
+    }
+
+    @Test
+    void searchByNdg_correctParams_restrictedSearch() throws Exception {
+        Page<NdgDocumentDTO> resultsPage = Mockito.mock(Page.class);
+        SearchRequestDTO searchRequestDTO = new SearchRequestDTO();
+        searchRequestDTO.setNdg("ndg");
+        Pageable pageable = PageRequest.of(0, 5);
+        String authorizationHeader = "authorization";
+        UserContext userContext = Mockito.mock(UserContext.class);
+        BankRole bankRole = BankRole.RM;
+        String username = "username";
+
+        Mockito.when(jwtToUserContextConverter.convert(authorizationHeader)).thenReturn(userContext);
+        Mockito.when(userContext.getRole()).thenReturn(bankRole);
+        Mockito.when(userContext.getUsername()).thenReturn(username);
+        Mockito.when(searchService.restrictedSearchByNDG(searchRequestDTO, username, bankRole, pageable)).thenReturn(resultsPage);
+        Mockito.when(resultsPage.getSort()).thenReturn(Sort.unsorted());
+
+        mockMvc.perform(post("/api/searchByNDG")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(searchRequestDTO))
+                        .param("pageNumber", String.valueOf(pageable.getPageNumber()))
+                        .param("pageSize", String.valueOf(pageable.getPageSize()))
+                        .header(HttpHeaders.AUTHORIZATION, authorizationHeader))
+                .andExpect(status().isOk());
+
+        Mockito.verify(searchService, Mockito.times(1)).restrictedSearchByNDG(searchRequestDTO, username, bankRole, pageable);
+    }
+
+    @Test
+    void searchByEvd_correctParams_otherSearch() throws Exception {
+        Page<EvdDocumentDTO> resultsPage = Mockito.mock(Page.class);
+        SearchRequestDTO searchRequestDTO = new SearchRequestDTO();
+        searchRequestDTO.setNdg("ndg");
+        Pageable pageable = PageRequest.of(0, 5);
+        String authorizationHeader = "authorization";
+        UserContext userContext = Mockito.mock(UserContext.class);
+        BankRole bankRole = BankRole.OTHER;
+        String username = "username";
+
+        Mockito.when(jwtToUserContextConverter.convert(authorizationHeader)).thenReturn(userContext);
+        Mockito.when(userContext.getRole()).thenReturn(bankRole);
+        Mockito.when(userContext.getUsername()).thenReturn(username);
+        Mockito.when(searchService.searchByEVD(searchRequestDTO, pageable)).thenReturn(resultsPage);
+        Mockito.when(resultsPage.getSort()).thenReturn(Sort.unsorted());
+
+        mockMvc.perform(post("/api/searchByEVD")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(searchRequestDTO))
+                        .param("pageNumber", String.valueOf(pageable.getPageNumber()))
+                        .param("pageSize", String.valueOf(pageable.getPageSize()))
+                        .header(HttpHeaders.AUTHORIZATION, authorizationHeader))
+                .andExpect(status().isOk());
+
+        Mockito.verify(searchService, Mockito.times(1)).searchByEVD(searchRequestDTO, pageable);
+    }
+
+    @Test
+    void searchByEvd_correctParams_restrictedSearch() throws Exception {
+        Page<EvdDocumentDTO> resultsPage = Mockito.mock(Page.class);
+        SearchRequestDTO searchRequestDTO = new SearchRequestDTO();
+        searchRequestDTO.setNdg("ndg");
+        Pageable pageable = PageRequest.of(0, 5);
+        String authorizationHeader = "authorization";
+        UserContext userContext = Mockito.mock(UserContext.class);
+        BankRole bankRole = BankRole.RM;
+        String username = "username";
+
+        Mockito.when(jwtToUserContextConverter.convert(authorizationHeader)).thenReturn(userContext);
+        Mockito.when(userContext.getRole()).thenReturn(bankRole);
+        Mockito.when(userContext.getUsername()).thenReturn(username);
+        Mockito.when(searchService.restrictedSearchByEVD(searchRequestDTO, username, bankRole, pageable))
+                .thenReturn(resultsPage);
+        Mockito.when(resultsPage.getSort()).thenReturn(Sort.unsorted());
+
+        mockMvc.perform(post("/api/searchByEVD")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(searchRequestDTO))
+                        .param("pageNumber", String.valueOf(pageable.getPageNumber()))
+                        .param("pageSize", String.valueOf(pageable.getPageSize()))
+                        .header(HttpHeaders.AUTHORIZATION, authorizationHeader))
+                .andExpect(status().isOk());
+
+        Mockito.verify(searchService, Mockito.times(1)).restrictedSearchByEVD(searchRequestDTO, username, bankRole, pageable);
+    }
+}
