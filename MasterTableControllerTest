@@ -63,28 +63,28 @@ class MasterTableControllerTest {
         verify(service).retriveManagedTables(eq(TableSectionEnum.COMMON), any());
     }
 
-    @Test
-    void retrieveTable_shouldReturn200() throws Exception {
+@Test
+void retrieveTable_shouldReturn200() throws Exception {
 
-        when(jwtToUserContextConverter.convert("Bearer token")).thenReturn(user());
+    when(jwtToUserContextConverter.convert("Bearer token")).thenReturn(user());
 
-        Page<Map<String, Object>> page = new PageImpl<>(
-                List.of(Map.of("k", "v")),
-                PageRequest.of(0, 1),
-                1
-        );
+    Page<Map<String, Object>> page = new PageImpl<>(
+            List.of(Map.of("k", "v")),
+            PageRequest.of(0, 1),
+            1
+    );
 
-        when(service.loadTable(eq("T_TEST"), any()))
-                .thenReturn(page);
+    when(service.loadTable(eq("T_TEST"), any()))
+            .thenReturn((Page<?>) page); // ✅ FIX
 
-        mockMvc.perform(post("/api/admin/tables/T_TEST/records")
-                        .param("pageNumber", "0")
-                        .param("pageSize", "1")
-                        .header("Authorization", "Bearer token"))
-                .andExpect(status().isOk());
+    mockMvc.perform(post("/api/admin/tables/T_TEST/records")
+                    .param("pageNumber", "0")
+                    .param("pageSize", "1")
+                    .header("Authorization", "Bearer token"))
+            .andExpect(status().isOk());
 
-        verify(service).loadTable(eq("T_TEST"), any());
-    }
+    verify(service).loadTable(eq("T_TEST"), any());
+}
 
     @Test
     void saveTable_shouldReturn200() throws Exception {
