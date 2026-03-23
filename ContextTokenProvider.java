@@ -1,22 +1,4 @@
-package eu.unicredit.xframe.qrh.admin.rs.security;
 
-
-import eu.unicredit.qrh.core.utils.collections.CollectionUtils;
-import eu.unicredit.qrh.core.utils.date.DateUtils;
-import eu.unicredit.xframe.qrh.admin.rs.configuration.JWTConfiguration;
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.SignatureException;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Date;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 
 @Component(ContextTokenProvider.SERVICE_NAME)
 @Slf4j
