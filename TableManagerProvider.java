@@ -1,13 +1,3 @@
-package eu.unicredit.xframe.qrh.admin.rs.service;
-
-import eu.unicredit.xframe.qrh.admin.rs.api.validation.ITableManager;
-import eu.unicredit.xframe.qrh.admin.rs.dto.BaseTableRequestDTO;
-import eu.unicredit.xframe.qrh.admin.rs.utility.HandleTableName;
-import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Provider finale delle strategie (manager specifici).
