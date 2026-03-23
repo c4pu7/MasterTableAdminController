@@ -1,3 +1,29 @@
+package eu.unicredit.xframe.qrh.admin.rs.api;
+
+import eu.unicredit.qrh.admin.dto.MasterTableResponseDTO;
+import eu.unicredit.qrh.admin.dto.TableAttributesDTO;
+import eu.unicredit.qrh.admin.enums.TableSectionEnum;
+import eu.unicredit.qrh.admin.exception.AdminException;
+import eu.unicredit.xframe.qrh.admin.rs.api.converter.JwtToUserContextConverter;
+import eu.unicredit.xframe.qrh.admin.rs.api.error.ApiError;
+import eu.unicredit.xframe.qrh.admin.rs.dto.BaseTableRequestDTO;
+import eu.unicredit.xframe.qrh.admin.rs.model.common.PageResponseDTO;
+import eu.unicredit.xframe.qrh.admin.rs.security.UserContext;
+import eu.unicredit.xframe.qrh.admin.rs.service.MasterTableService;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
+import java.util.Map;
+
+import static eu.unicredit.xframe.qrh.admin.rs.utility.PaginationUtility.generatePaginationHttpForListResponse;
 
 @RestController
 @RequestMapping(ControllerConstants.ADMIN_API_CONTEXT)
@@ -51,7 +77,7 @@ public class MasterTableController {
             @ApiResponse(code = 403, message = "Forbidden: the user is authenticated but do not have the authority to perform this action"),
             @ApiResponse(code = 500, message = "Generic error", response = ApiError.class)
     })
-    public ResponseEntity<PageResponseDTO<Map<String, Object>>> retrieveTable(
+    public ResponseEntity<PageResponseDTO<?>> retrieveTable(
             @PathVariable("tableId") String tableName,
             @RequestParam(defaultValue = "0") int pageNumber,
             @RequestParam(defaultValue = "1") int pageSize,
@@ -63,8 +89,8 @@ public class MasterTableController {
             throw new AdminException("Unable to validate user identity", Collections.singletonList("user-not-valid"));
         }
 
-        Page<Map<String, Object>> resultsPage =
-                (Page<Map<String, Object>>) service.loadTable(
+        Page<?> resultsPage =
+                 service.loadTable(
                         tableName,
                         PageRequest.of(pageNumber, pageSize)
                 );
