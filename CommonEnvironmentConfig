@@ -1,0 +1,9 @@
+
+@ExtendWith(EnvironmentVariablesExtension.class)
+@EnvironmentVariables("DS_JNDI=" + DS_JNDI_VALUE)
+@EnvironmentVariables("CREDENTIAL_PROVIDER_TYPE=database")
+@EnvironmentVariables(value = "application-config-env.properties", source = EnvironmentVariablesSource.PROPERTIES)
+@AutoConfigureWireMock(port = 0)
+public abstract class CommonEnvironmentConfig {
+    public static final String DS_JNDI_VALUE = "qrhtest";
+}

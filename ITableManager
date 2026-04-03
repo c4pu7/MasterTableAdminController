@@ -1,5 +1,0 @@
-public interface ITableManager<DTO extends BaseTableRequestDTO> {
-    Page<DTO> loadTable(Pageable pageable);
-
-    void saveTable(DTO dto, UserContext userContext, LocalDateTime now);
-}
