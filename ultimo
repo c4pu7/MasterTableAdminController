@@ -1,5 +1,11 @@
-@SpringBootTest(properties = {
-    "spring.autoconfigure.exclude=" +
-    "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration," +
-    "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration"
-})
+@SpringBootTest
+@ContextConfiguration(classes = QrhAdminApplication.class)
+@Import(CoreEngineMockConfig.class)
+@ComponentScan(
+    basePackages = "eu.unicredit",
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.ASSIGNABLE_TYPE,
+        classes = eu.unicredit.qrh.admin.lib.config.QrhJpaConfig.class
+    )
+)
+public class BaseContextTest extends CommonEnvironmentConfig {
