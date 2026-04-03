@@ -1,4 +1,6 @@
 
+package eu.unicredit.xframe.qrh.admin.rs;
+
 import eu.unicredit.qrh.core.utils.persistence.repository.CustomRepositoryImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -30,7 +32,7 @@ import java.util.concurrent.Executor;
 @EnableAsync(proxyTargetClass = true)
 @ComponentScan(value = {"eu.unicredit.xframe.qrh.admin.rs", "eu.unicredit.qrh.core", "eu.unicredit.qrh.admin", "eu.unicredit.qrh"})
 @EntityScan(basePackages = {"eu.unicredit.xframe.qrh.admin.rs", "eu.unicredit.qrh.core", "eu.unicredit.qrh.admin"})
-@EnableJpaRepositories(basePackages = {"eu.unicredit.qrh.core", "eu.unicredit.qrh.admin","eu.unicredit.xframe.qrh.admin.rs.repository"}, repositoryBaseClass = CustomRepositoryImpl.class)
+@EnableJpaRepositories(basePackages = {"eu.unicredit.qrh.core","eu.unicredit.xframe.qrh.admin.rs.repository"}, repositoryBaseClass = CustomRepositoryImpl.class)
 public class QrhAdminApplication implements AsyncConfigurer {
 
     public static void main(String[] args) {
