@@ -1,6 +1,32 @@
-@SpringBootTest
-@ContextConfiguration(classes = QrhAdminApplication.class)
-@Import(CoreEngineMockConfig.class)
-@TestPropertySource(properties = {
-    "spring.autoconfigure.exclude=eu.unicredit.qrh.admin.lib.config.QrhJpaConfig"
-})
+package eu.unicredit.xframe.qrh.admin.rs.config;
+
+import eu.unicredit.xframe.qrh.admin.rs.QrhAdminApplication;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.task.TaskDecorator;
+import org.springframework.scheduling.annotation.AsyncConfigurer;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import java.util.concurrent.Executor;
+
+@TestConfiguration
+@EnableAsync
+public class TestAsyncConfig implements AsyncConfigurer {
+
+    @Override
+    @Bean(name = "taskExecutor")
+    public Executor getAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(1);
+        executor.setQueueCapacity(10);
+
+        // usa il decorator già definito nella tua app
+        TaskDecorator taskDecorator = new QrhAdminApplication.MdcTaskDecorator();
+        executor.setTaskDecorator(taskDecorator);
+
+        executor.initialize();
+        return executor;
+    }
+}
