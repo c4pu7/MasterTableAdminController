@@ -1,0 +1,47 @@
+
+.dialog-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 24px 24px;
+}
+
+.container-title {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.datepicker-width {
+  width: 200px !important;
+  margin-right: 10px;
+}
+
+.nr-continer {
+  display: flex;
+  align-items: center;
+}
+
+.nr-field {
+  margin: 0;
+  width: 125px !important;
+}
+
+.separator{
+  padding: 0 4px;
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.button-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
+}
