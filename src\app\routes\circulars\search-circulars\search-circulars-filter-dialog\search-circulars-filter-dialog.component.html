@@ -1,0 +1,205 @@
+<div mat-dialog-title class="dialog-title">
+  <div class="container-title">
+    <h2>{{ "table-filters.title" | translate }}</h2>
+    <a mat-button ucsSvg svgType="mono" svgGroup="navigation-and-action" svgCode="close" svgSize="small" svgAlign="left" (click)="onCancel()"
+      ><span></span
+    ></a>
+  </div>
+</div>
+<div mat-dialog-content>
+  <div class="container">
+    <form #managerRegistryForm="ngForm">
+      <div class="container-item">
+        <div class="nr-continer">
+          <mat-form-field class="nr-field">
+            <mat-label>{{ "circulars.searchTable.filters.nrCircular" | translate }}</mat-label>
+            <input matInput [(ngModel)]="searchCriteria.nrCircular" style="width: 90px" name="nrCircular" />
+          </mat-form-field>
+          <h3 class="separator">/</h3>
+          <mat-form-field class="nr-field">
+            <mat-label>{{ "circulars.searchTable.filters.nrYear" | translate }}</mat-label>
+            <input matInput [(ngModel)]="searchCriteria.nrYear" style="width: 90px" name="nrYear" />
+          </mat-form-field>
+        </div>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.circularStatus" | translate }}</mat-label>
+          <mat-select [(value)]="searchCriteria.circularStatus">
+            <mat-option value="Bozza">Bozza</mat-option>
+            <mat-option value="Validata">Validata</mat-option>
+            <mat-option value="Inviata">Inviata</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.circularType" | translate }}</mat-label>
+          <mat-select [(value)]="searchCriteria.circularType">
+            <mat-option value="Interna">Interna</mat-option>
+            <mat-option value="Rete">Rete</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.nrVersion" | translate }}</mat-label>
+          <textarea
+            matInput
+            cdkTextareaAutosize
+            cdkAutosizeMinRows="1"
+            cdkAutosizeMaxRows="5"
+            [(ngModel)]="searchCriteria.nrVersion"
+            name="nrVersion"
+          ></textarea>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.neve" | translate }}</mat-label>
+          <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5" name="neve"></textarea>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.eventTypeCad" | translate }}</mat-label>
+          <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5" name="eventTypeCAD"></textarea>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.corp" | translate }}</mat-label>
+          <textarea
+            matInput
+            cdkTextareaAutosize
+            cdkAutosizeMinRows="1"
+            cdkAutosizeMaxRows="5"
+            [(ngModel)]="searchCriteria.corp"
+            name="corp"
+          ></textarea>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.camv" | translate }}</mat-label>
+          <mat-select [(ngModel)]="searchCriteria.camv" [ngModelOptions]="{ standalone: true }">
+            <mat-option *ngFor="let camv of camvList()" [value]="camv.id">
+              {{ camv.camv }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field floatLabel="always" class="linear-select">
+          <mat-label>{{ "circulars.searchTable.filters.caev" | translate }}</mat-label>
+          <mat-select [(ngModel)]="searchCriteria.caev" [ngModelOptions]="{ standalone: true }">
+            <mat-option *ngFor="let caev of caevList()" [value]="caev.id">
+              {{ caev.caev }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.eventStatusCircular" | translate }}</mat-label>
+          <mat-select>
+            <mat-option value="Attivo">Attivo</mat-option>
+            <mat-option value="Concluso">Concluso</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.operatorInsert" | translate }}</mat-label>
+          <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5" name="operatorInsert"></textarea>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.operatorUpdate" | translate }}</mat-label>
+          <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5" name="operatorUpdate"></textarea>
+        </mat-form-field>
+        <mat-form-field class="datepicker-width">
+          <mat-label>{{ "circulars.searchTable.filters.paymentDate" | translate }}</mat-label>
+          <input matInput [matDatepicker]="paymentDate" name="recordDate" />
+          <mat-datepicker-toggle matSuffix [for]="paymentDate"></mat-datepicker-toggle>
+          <mat-datepicker #paymentDate></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field class="datepicker-width">
+          <mat-label>{{ "circulars.searchTable.filters.recordDate" | translate }}</mat-label>
+          <input matInput [matDatepicker]="recordDate" name="recordDate" />
+          <mat-datepicker-toggle matSuffix [for]="recordDate"></mat-datepicker-toggle>
+          <mat-datepicker #recordDate></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field class="datepicker-width">
+          <mat-label>{{ "circulars.searchTable.filters.insertDate" | translate }}</mat-label>
+          <mat-date-range-input [rangePicker]="insertDate">
+            <input matStartDate name="insertDateFrom" [(ngModel)]="searchCriteria.creationDateFrom" />
+            <input matEndDate name="insertDateTo" [(ngModel)]="searchCriteria.creationDateTo"
+          /></mat-date-range-input>
+          <mat-datepicker-toggle matSuffix [for]="insertDate"></mat-datepicker-toggle>
+          <mat-date-range-picker #insertDate></mat-date-range-picker>
+        </mat-form-field>
+        <mat-form-field class="datepicker-width">
+          <mat-label>{{ "circulars.searchTable.filters.deadline" | translate }}</mat-label>
+          <input matInput [matDatepicker]="deadline" name="recordDate" />
+          <mat-datepicker-toggle matSuffix [for]="deadline"></mat-datepicker-toggle>
+          <mat-datepicker #deadline></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field class="datepicker-width">
+          <mat-label>{{ "circulars.searchTable.filters.exDate" | translate }}</mat-label>
+          <input matInput [matDatepicker]="exDate" name="recordDate" />
+          <mat-datepicker-toggle matSuffix [for]="exDate"></mat-datepicker-toggle>
+          <mat-datepicker #exDate></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field class="datepicker-width">
+          <mat-label>{{ "circulars.searchTable.filters.update" | translate }}</mat-label>
+          <mat-date-range-input [rangePicker]="update">
+            <input matStartDate name="updateDateFrom" [(ngModel)]="searchCriteria.updateDateFrom" />
+            <input matEndDate name="updateDateTo" [(ngModel)]="searchCriteria.updateDateTo"
+          /></mat-date-range-input>
+          <mat-datepicker-toggle matSuffix [for]="update"></mat-datepicker-toggle>
+          <mat-date-range-picker #update></mat-date-range-picker>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.update" | translate }}</mat-label>
+          <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5" name="update"></textarea>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.titleCodePartecipant" | translate }}</mat-label>
+          <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5" name="titleCodePartecipant"></textarea>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.titleCodeIssuerPartecipant" | translate }}</mat-label>
+          <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5" name="titleCodeIssuerPartecipant"></textarea>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.partecipantIsin" | translate }}</mat-label>
+          <textarea
+            matInput
+            cdkTextareaAutosize
+            cdkAutosizeMinRows="1"
+            cdkAutosizeMaxRows="5"
+            [(ngModel)]="searchCriteria.partecipantIsin"
+            name="partecipantIsin"
+          ></textarea>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.comingIsin" | translate }}</mat-label>
+          <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5" name="comingIsin"></textarea>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.titleCodeComing" | translate }}</mat-label>
+          <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5" name="titleCodeComing"></textarea>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>{{ "circulars.searchTable.filters.titleCodeIssuerComing" | translate }}</mat-label>
+          <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5" name="titleCodeIssuerComing"></textarea>
+        </mat-form-field>
+      </div>
+    </form>
+  </div>
+</div>
+<div mat-dialog-actions class="actions">
+  <button mat-button (click)="onCancel()">
+    <span>{{ "buttons.cancel" | translate }}</span>
+  </button>
+  <div align="end" class="button-row">
+    <button
+      mat-button
+      ucsSvg
+      svgType="mono"
+      svgGroup="navigation-and-action"
+      svgCode="delete"
+      svgSize="small"
+      svgAlign="left"
+      [useReverseColors]="false"
+      [disabled]="filtersEmpty()"
+      (click)="onReset()"
+    >
+      <span>{{ "table-filters.reset" | translate }}</span>
+    </button>
+    <button mat-button color="primary" (click)="onFilter()" [disabled]="filtersEmpty()">
+      <span>{{ "buttons.filter" | translate }}</span>
+    </button>
+  </div>
+</div>
